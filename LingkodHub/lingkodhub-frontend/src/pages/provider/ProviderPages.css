@@ -1,0 +1,7 @@
+/* Provider Pages Styles */
+/* Inherits all design system components from Admin */
+@import url('../admin/AdminPages.css');
+@import url('../admin/AdminDashboard.css');
+
+/* Provider-specific additions that don't conflict with admin design */
+/* All base styling comes from Admin design system for consistency */

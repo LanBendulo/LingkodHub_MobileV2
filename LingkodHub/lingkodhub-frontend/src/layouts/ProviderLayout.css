@@ -1,0 +1,6 @@
+/* Provider Layout - Inherits from AdminLayout.css */
+/* This file uses the exact same design system as AdminLayout */
+@import url('./AdminLayout.css');
+
+/* Provider-specific overrides (minimal) */
+/* All styling inherits from AdminLayout to maintain consistency */
