@@ -1,21 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ProviderLayout from '../../layouts/ProviderLayout';
-import { mockBookings } from '../../data/mockData';
+import { mockBookingsProvider, getBookingsByStatus } from '../../data/providerMockData';
 import './ProviderPages.css';
+import './ProviderWorkflow.css';
 
 const BookingRequests = () => {
-  const [filter, setFilter] = useState('pending');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || 'all';
+  
+  const [filter, setFilter] = useState(tabFromUrl);
+  const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    // Load from localStorage or use mock data
+    const savedBookings = localStorage.getItem('provider_bookings');
+    const loadedBookings = savedBookings ? JSON.parse(savedBookings) : mockBookingsProvider;
+    setBookings(loadedBookings);
+  }, []);
+
+  useEffect(() => {
+    setFilter(tabFromUrl);
+  }, [tabFromUrl]);
 
   const filteredRequests = filter === 'all' 
-    ? mockBookings 
-    : mockBookings.filter(b => b.status === filter);
+    ? bookings 
+    : bookings.filter(b => b.status === filter);
 
-  const handleAccept = (id) => {
-    alert(`Booking ${id} accepted!`);
-  };
+  const getStatusCounts = () => ({
+    all: bookings.length,
+    pending: bookings.filter(b => b.status === 'pending').length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+    'in-progress': bookings.filter(b => b.status === 'in-progress').length,
+    completed: bookings.filter(b => b.status === 'completed').length,
+    declined: bookings.filter(b => b.status === 'declined').length,
+  });
 
-  const handleDecline = (id) => {
-    alert(`Booking ${id} declined!`);
+  const counts = getStatusCounts();
+
+  const handleViewDetails = (bookingId) => {
+    navigate(`/provider/booking/${bookingId}`);
   };
 
   return (
@@ -37,31 +62,35 @@ const BookingRequests = () => {
       {/* Stats Grid */}
       <div className="stats-grid-small">
         <div className="stat-card-small">
+          <div className="stat-label-small">All Requests</div>
+          <div className="stat-value-small">{counts.all}</div>
+        </div>
+        <div className="stat-card-small">
           <div className="stat-label-small">Pending</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'pending').length}</div>
+          <div className="stat-value-small">{counts.pending}</div>
         </div>
         <div className="stat-card-small">
           <div className="stat-label-small">Confirmed</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'confirmed').length}</div>
+          <div className="stat-value-small">{counts.confirmed}</div>
+        </div>
+        <div className="stat-card-small">
+          <div className="stat-label-small">In Progress</div>
+          <div className="stat-value-small">{counts['in-progress']}</div>
         </div>
         <div className="stat-card-small">
           <div className="stat-label-small">Completed</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'completed').length}</div>
+          <div className="stat-value-small">{counts.completed}</div>
         </div>
         <div className="stat-card-small">
-          <div className="stat-label-small">All Requests</div>
-          <div className="stat-value-small">{mockBookings.length}</div>
+          <div className="stat-label-small">Declined</div>
+          <div className="stat-value-small">{counts.declined}</div>
         </div>
       </div>
 
       {/* Filter Bar */}
       <div className="filter-bar">
-        <div className="filter-row" style={{ gridTemplateColumns: '1fr auto' }}>
-          <div className="search-input-wrapper">
-            <i className="bi bi-search"></i>
-            <input type="text" placeholder="Search by service, location, or client..." />
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="filter-row" style={{ gridTemplateColumns: '1fr' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
               onClick={() => setFilter('all')}
               className={`filter-select ${filter === 'all' ? 'active' : ''}`}
@@ -72,7 +101,7 @@ const BookingRequests = () => {
                 cursor: 'pointer'
               }}
             >
-              All ({mockBookings.length})
+              All ({counts.all})
             </button>
             <button
               onClick={() => setFilter('pending')}
@@ -84,7 +113,7 @@ const BookingRequests = () => {
                 cursor: 'pointer'
               }}
             >
-              Pending ({mockBookings.filter(b => b.status === 'pending').length})
+              Pending ({counts.pending})
             </button>
             <button
               onClick={() => setFilter('confirmed')}
@@ -96,19 +125,43 @@ const BookingRequests = () => {
                 cursor: 'pointer'
               }}
             >
-              Confirmed ({mockBookings.filter(b => b.status === 'confirmed').length})
+              Confirmed ({counts.confirmed})
+            </button>
+            <button
+              onClick={() => setFilter('in-progress')}
+              className={`filter-select ${filter === 'in-progress' ? 'active' : ''}`}
+              style={{
+                background: filter === 'in-progress' ? '#8b5cf6' : '#f8fafc',
+                color: filter === 'in-progress' ? 'white' : '#0f172a',
+                border: filter === 'in-progress' ? '1px solid #8b5cf6' : '1px solid #e2e8f0',
+                cursor: 'pointer'
+              }}
+            >
+              In Progress ({counts['in-progress']})
             </button>
             <button
               onClick={() => setFilter('completed')}
               className={`filter-select ${filter === 'completed' ? 'active' : ''}`}
               style={{
-                background: filter === 'completed' ? '#2563eb' : '#f8fafc',
+                background: filter === 'completed' ? '#10b981' : '#f8fafc',
                 color: filter === 'completed' ? 'white' : '#0f172a',
-                border: filter === 'completed' ? '1px solid #2563eb' : '1px solid #e2e8f0',
+                border: filter === 'completed' ? '1px solid #10b981' : '1px solid #e2e8f0',
                 cursor: 'pointer'
               }}
             >
-              Completed ({mockBookings.filter(b => b.status === 'completed').length})
+              Completed ({counts.completed})
+            </button>
+            <button
+              onClick={() => setFilter('declined')}
+              className={`filter-select ${filter === 'declined' ? 'active' : ''}`}
+              style={{
+                background: filter === 'declined' ? '#dc2626' : '#f8fafc',
+                color: filter === 'declined' ? 'white' : '#0f172a',
+                border: filter === 'declined' ? '1px solid #dc2626' : '1px solid #e2e8f0',
+                cursor: 'pointer'
+              }}
+            >
+              Declined ({counts.declined})
             </button>
           </div>
         </div>
@@ -118,169 +171,115 @@ const BookingRequests = () => {
       {filteredRequests.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
           {filteredRequests.map((booking) => (
-            <div key={booking.id} className="settings-card">
-              <div className="settings-card-body">
-                <div className="row">
-                  <div className="col-md-8">
-                    <div style={{ marginBottom: '1.125rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.625rem' }}>
-                        <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-                          {booking.service}
-                        </h3>
-                        <span className={`status-badge status-${booking.status}`}>
-                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                        </span>
+            <div key={booking.id} className="booking-card-provider">
+              {/* Header */}
+              <div className="booking-card-header">
+                <div className="booking-id-badge">
+                  <i className="bi bi-bookmark-fill"></i>
+                  {booking.id}
+                </div>
+                <span className={`booking-status-badge status-${booking.status}`}>
+                  {booking.status === 'in-progress' ? 'IN PROGRESS' : booking.status.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Body */}
+              <div className="booking-card-body">
+                {/* Resident Info */}
+                <div className="booking-resident">
+                  <img 
+                    src={booking.resident.avatar} 
+                    alt={booking.resident.name}
+                    className="resident-avatar-booking"
+                  />
+                  <div className="resident-info-booking">
+                    <h4 className="resident-name-booking">{booking.resident.name}</h4>
+                    <div className="resident-contact-row">
+                      <div className="contact-info-item">
+                        <i className="bi bi-telephone-fill"></i>
+                        {booking.resident.phone}
+                      </div>
+                      <div className="contact-info-item">
+                        <i className="bi bi-envelope-fill"></i>
+                        {booking.resident.email}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.875rem', marginBottom: '1.125rem' }}>
-                      <div>
-                        <div style={{ fontSize: '0.6875rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
-                          Date & Time
-                        </div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#0f172a' }}>
-                          <i className="bi bi-calendar me-2"></i>
-                          {booking.date}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#0f172a' }}>
-                          <i className="bi bi-clock me-2"></i>
-                          {booking.time}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: '0.6875rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
-                          Duration
-                        </div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#0f172a' }}>
-                          <i className="bi bi-hourglass-split me-2"></i>
-                          {booking.estimatedDuration}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div style={{ fontSize: '0.6875rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
-                          Location
-                        </div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#0f172a' }}>
-                          <i className="bi bi-geo-alt me-2"></i>
-                          {booking.location}
-                        </div>
-                      </div>
+                {/* Booking Details Grid */}
+                <div className="booking-details-grid">
+                  <div className="booking-detail-item">
+                    <div className="detail-icon-wrapper detail-icon-service">
+                      <i className={`bi ${booking.service.icon}`}></i>
                     </div>
-
-                    {booking.description && (
-                      <div style={{ 
-                        padding: '1rem', 
-                        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
-                        borderRadius: '0.5rem',
-                        border: '1px solid #f1f5f9'
-                      }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>
-                          Service Details
-                        </div>
-                        <div style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: '1.5' }}>
-                          {booking.description}
-                        </div>
-                      </div>
-                    )}
+                    <div className="detail-content">
+                      <div className="detail-label">Service</div>
+                      <div className="detail-value">{booking.service.name}</div>
+                    </div>
                   </div>
 
-                  <div className="col-md-4">
-                    <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                      <div style={{ fontSize: '0.6875rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>
-                        Total Amount
-                      </div>
-                      <div style={{ fontSize: '2rem', fontWeight: '800', color: '#2563eb', lineHeight: '1', marginBottom: '0.5rem', letterSpacing: '-0.04em' }}>
-                        ₱{booking.totalCost}
-                      </div>
+                  <div className="booking-detail-item">
+                    <div className="detail-icon-wrapper detail-icon-date">
+                      <i className="bi bi-calendar-event"></i>
                     </div>
-
-                    {booking.status === 'pending' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                        <button
-                          className="action-btn action-btn-primary"
-                          onClick={() => handleAccept(booking.id)}
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-check-circle me-2"></i>
-                          Accept Request
-                        </button>
-                        <button
-                          className="action-btn action-btn-danger"
-                          onClick={() => handleDecline(booking.id)}
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-x-circle me-2"></i>
-                          Decline
-                        </button>
-                        <button
-                          className="action-btn"
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-chat-dots me-2"></i>
-                          Message Client
-                        </button>
-                      </div>
-                    )}
-
-                    {booking.status === 'confirmed' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                        <button
-                          className="action-btn"
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-chat-dots me-2"></i>
-                          Message Client
-                        </button>
-                        <button
-                          className="action-btn action-btn-primary"
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-check-circle me-2"></i>
-                          Mark as Complete
-                        </button>
-                        <button
-                          className="action-btn action-btn-danger"
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700' }}
-                        >
-                          <i className="bi bi-x-circle me-2"></i>
-                          Cancel Booking
-                        </button>
-                      </div>
-                    )}
-
-                    {booking.status === 'completed' && (
-                      <div>
-                        <button
-                          className="action-btn action-btn-primary"
-                          disabled
-                          style={{ width: '100%', padding: '0.75rem', height: 'auto', fontWeight: '700', opacity: 0.6, cursor: 'not-allowed' }}
-                        >
-                          <i className="bi bi-check-circle-fill me-2"></i>
-                          Completed
-                        </button>
-                        {booking.rating && (
-                          <div style={{ 
-                            marginTop: '1rem',
-                            padding: '1rem', 
-                            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
-                            borderRadius: '0.5rem',
-                            border: '1px solid rgba(251, 191, 36, 0.2)'
-                          }}>
-                            <div className="text-warning" style={{ marginBottom: '0.5rem', fontSize: '1.125rem' }}>
-                              {[...Array(booking.rating)].map((_, i) => (
-                                <i key={i} className="bi bi-star-fill"></i>
-                              ))}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b' }}>
-                              Client rated this service
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div className="detail-content">
+                      <div className="detail-label">Date & Time</div>
+                      <div className="detail-value">{booking.date} at {booking.time}</div>
+                    </div>
                   </div>
+
+                  <div className="booking-detail-item">
+                    <div className="detail-icon-wrapper detail-icon-location">
+                      <i className="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div className="detail-content">
+                      <div className="detail-label">Location</div>
+                      <div className="detail-value">{booking.address.barangay}</div>
+                    </div>
+                  </div>
+
+                  <div className="booking-detail-item">
+                    <div className="detail-icon-wrapper detail-icon-price">
+                      <i className="bi bi-currency-dollar"></i>
+                    </div>
+                    <div className="detail-content">
+                      <div className="detail-label">Your Price</div>
+                      <div className="detail-value detail-value-price">₱{booking.pricing.provider}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Problem Preview */}
+                {booking.problemDescription && (
+                  <div className="problem-preview">
+                    <div className="problem-preview-label">
+                      <i className="bi bi-chat-left-text"></i>
+                      Problem Description
+                    </div>
+                    <p className="problem-preview-text">
+                      {booking.problemDescription.length > 150 
+                        ? booking.problemDescription.substring(0, 150) + '...' 
+                        : booking.problemDescription}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="booking-card-footer">
+                <div className="booking-meta-time">
+                  <i className="bi bi-clock-history"></i>
+                  Requested {new Date(booking.createdAt).toLocaleDateString()}
+                </div>
+                <div className="booking-actions-row">
+                  <button 
+                    className="btn-booking-action btn-view-details"
+                    onClick={() => handleViewDetails(booking.id)}
+                  >
+                    <i className="bi bi-eye"></i>
+                    View Details
+                  </button>
                 </div>
               </div>
             </div>

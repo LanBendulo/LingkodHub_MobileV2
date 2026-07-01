@@ -364,14 +364,12 @@ const LandingPage = () => {
             </p>
           </div>
           
-          <div className="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-4">
+          <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
             {[
               { name: 'Plumbing', icon: 'bi-wrench-adjustable', color: '#3b82f6', desc: 'Pipes, leaks & repairs' },
               { name: 'Electrical', icon: 'bi-lightning-charge', color: '#f59e0b', desc: 'Wiring & installations' },
               { name: 'Cleaning', icon: 'bi-brush', color: '#10b981', desc: 'Deep & regular cleaning' },
               { name: 'AC Repair', icon: 'bi-fan', color: '#06b6d4', desc: 'Cooling solutions' },
-              { name: 'Painting', icon: 'bi-paint-bucket', color: '#ef4444', desc: 'Interior & exterior' },
-              { name: 'Carpentry', icon: 'bi-hammer', color: '#8b5cf6', desc: 'Custom woodwork' },
             ].map((service, index) => (
               <div key={index} className="col">
                 <Link

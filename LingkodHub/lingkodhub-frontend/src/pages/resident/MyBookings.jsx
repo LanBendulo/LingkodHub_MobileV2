@@ -1,273 +1,361 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ResidentLayout from '../../layouts/ResidentLayout';
-import { mockBookings } from '../../data/mockData';
-import './ResidentPages.css';
+import './MyBookings.css';
 
 const MyBookings = () => {
-  const [filter, setFilter] = useState('all');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('all');
 
-  const filteredBookings = filter === 'all' 
+  // Mock booking data
+  const mockBookings = [
+    {
+      id: 'BK-2026-001',
+      provider: {
+        name: "Juan's Plumbing Services",
+        owner: "Juan Dela Cruz",
+        avatar: "https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=2563eb&color=fff",
+        verified: true,
+        rating: 4.9,
+      },
+      service: {
+        name: "Leak Repair",
+        category: "Plumbing",
+        icon: "bi-droplet-fill",
+      },
+      date: "2026-07-05",
+      time: "10:00 AM",
+      status: "pending",
+      price: 370,
+      address: "123 JP Laurel Ave, Poblacion, Davao City",
+      createdAt: "2026-07-01",
+    },
+    {
+      id: 'BK-2026-002',
+      provider: {
+        name: "PowerFix Electrical",
+        owner: "Maria Santos",
+        avatar: "https://ui-avatars.com/api/?name=Maria+Santos&background=2563eb&color=fff",
+        verified: true,
+        rating: 4.8,
+      },
+      service: {
+        name: "Outlet Installation",
+        category: "Electrical",
+        icon: "bi-lightning-charge-fill",
+      },
+      date: "2026-07-03",
+      time: "02:00 PM",
+      status: "confirmed",
+      price: 450,
+      address: "456 Roxas Ave, Buhangin, Davao City",
+      createdAt: "2026-06-28",
+    },
+    {
+      id: 'BK-2026-003',
+      provider: {
+        name: "SparkClean Services",
+        owner: "Pedro Cruz",
+        avatar: "https://ui-avatars.com/api/?name=Pedro+Cruz&background=2563eb&color=fff",
+        verified: true,
+        rating: 4.7,
+      },
+      service: {
+        name: "Deep House Cleaning",
+        category: "House Cleaning",
+        icon: "bi-house-fill",
+      },
+      date: "2026-07-02",
+      time: "09:00 AM",
+      status: "in-progress",
+      price: 800,
+      address: "789 Quimpo Blvd, Talomo, Davao City",
+      createdAt: "2026-06-25",
+    },
+    {
+      id: 'BK-2026-004',
+      provider: {
+        name: "CoolAir Technicians",
+        owner: "Ana Reyes",
+        avatar: "https://ui-avatars.com/api/?name=Ana+Reyes&background=2563eb&color=fff",
+        verified: true,
+        rating: 4.9,
+      },
+      service: {
+        name: "AC Maintenance",
+        category: "AC Cleaning",
+        icon: "bi-fan",
+      },
+      date: "2026-06-28",
+      time: "11:00 AM",
+      status: "completed",
+      price: 600,
+      address: "321 Bolton St, Agdao, Davao City",
+      createdAt: "2026-06-20",
+      completedAt: "2026-06-28",
+    },
+    {
+      id: 'BK-2026-005',
+      provider: {
+        name: "QuickFix Plumbing",
+        owner: "Carlos Mendoza",
+        avatar: "https://ui-avatars.com/api/?name=Carlos+Mendoza&background=2563eb&color=fff",
+        verified: false,
+        rating: 4.5,
+      },
+      service: {
+        name: "Drain Unclogging",
+        category: "Plumbing",
+        icon: "bi-droplet-fill",
+      },
+      date: "2026-06-25",
+      time: "03:00 PM",
+      status: "cancelled",
+      price: 300,
+      address: "654 Pichon St, Poblacion, Davao City",
+      createdAt: "2026-06-22",
+      cancelledAt: "2026-06-24",
+      cancelReason: "Provider unavailable",
+    },
+  ];
+
+  const tabs = [
+    { id: 'all', label: 'All Bookings', icon: 'bi-list-ul' },
+    { id: 'pending', label: 'Pending', icon: 'bi-clock-history' },
+    { id: 'confirmed', label: 'Confirmed', icon: 'bi-check-circle' },
+    { id: 'in-progress', label: 'In Progress', icon: 'bi-arrow-repeat' },
+    { id: 'completed', label: 'Completed', icon: 'bi-check-all' },
+    { id: 'cancelled', label: 'Cancelled', icon: 'bi-x-circle' },
+  ];
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: { label: 'Pending Approval', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', icon: 'bi-clock-history' },
+      confirmed: { label: 'Confirmed', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.1)', icon: 'bi-check-circle-fill' },
+      'in-progress': { label: 'In Progress', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', icon: 'bi-arrow-repeat' },
+      completed: { label: 'Completed', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: 'bi-check-all' },
+      cancelled: { label: 'Cancelled', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', icon: 'bi-x-circle-fill' },
+    };
+    return badges[status] || badges.pending;
+  };
+
+  const filteredBookings = activeTab === 'all' 
     ? mockBookings 
-    : mockBookings.filter(b => b.status === filter);
+    : mockBookings.filter(booking => booking.status === activeTab);
+
+  const getBookingCount = (tabId) => {
+    if (tabId === 'all') return mockBookings.length;
+    return mockBookings.filter(booking => booking.status === tabId).length;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleViewDetails = (bookingId) => {
+    navigate(`/resident/bookings/${bookingId}`);
+  };
 
   return (
     <ResidentLayout>
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <div className="breadcrumb-nav">
-            <i className="bi bi-house-door"></i>
-            <span>Bookings</span>
-            <i className="bi bi-chevron-right"></i>
-            <span>My Bookings</span>
+      <div className="my-bookings-container">
+        {/* Header */}
+        <div className="bookings-header">
+          <div>
+            <div className="breadcrumb-nav">
+              <i className="bi bi-house-door"></i>
+              <i className="bi bi-chevron-right"></i>
+              <span>My Bookings</span>
+            </div>
+            <h1 className="bookings-title">My Bookings</h1>
+            <p className="bookings-subtitle">Manage and track all your service bookings</p>
           </div>
-          <h1 className="page-title">My Bookings</h1>
-          <p className="page-subtitle">Manage and track your service bookings</p>
+          <button className="btn-new-booking" onClick={() => navigate('/resident/find-services')}>
+            <i className="bi bi-plus-circle"></i>
+            New Booking
+          </button>
         </div>
-        <Link 
-          to="/resident/find-services"
-          className="action-btn action-btn-primary"
-          style={{ width: 'auto', padding: '0.625rem 1.5rem', height: 'auto', fontWeight: '700' }}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          New Booking
-        </Link>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid-small">
-        <div className="stat-card-small">
-          <div className="stat-label-small">All Bookings</div>
-          <div className="stat-value-small">{mockBookings.length}</div>
-        </div>
-        <div className="stat-card-small">
-          <div className="stat-label-small">Confirmed</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'confirmed').length}</div>
-        </div>
-        <div className="stat-card-small">
-          <div className="stat-label-small">Pending</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'pending').length}</div>
-        </div>
-        <div className="stat-card-small">
-          <div className="stat-label-small">Completed</div>
-          <div className="stat-value-small">{mockBookings.filter(b => b.status === 'completed').length}</div>
-        </div>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="filter-bar">
-        <div className="filter-row" style={{ gridTemplateColumns: '1fr auto' }}>
-          <div className="search-input-wrapper">
-            <i className="bi bi-search"></i>
-            <input type="text" placeholder="Search bookings by service or provider..." />
+        {/* Stats Cards */}
+        <div className="bookings-stats">
+          <div className="stat-card">
+            <div className="stat-icon pending">
+              <i className="bi bi-clock-history"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{getBookingCount('pending')}</div>
+              <div className="stat-label">Pending</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={() => setFilter('all')}
-              className="filter-select"
-              style={{
-                background: filter === 'all' ? '#2563eb' : '#f8fafc',
-                color: filter === 'all' ? 'white' : '#0f172a',
-                border: filter === 'all' ? '1px solid #2563eb' : '1px solid #e2e8f0',
-                cursor: 'pointer'
-              }}
-            >
-              All ({mockBookings.length})
-            </button>
-            <button
-              onClick={() => setFilter('confirmed')}
-              className="filter-select"
-              style={{
-                background: filter === 'confirmed' ? '#2563eb' : '#f8fafc',
-                color: filter === 'confirmed' ? 'white' : '#0f172a',
-                border: filter === 'confirmed' ? '1px solid #2563eb' : '1px solid #e2e8f0',
-                cursor: 'pointer'
-              }}
-            >
-              Confirmed ({mockBookings.filter(b => b.status === 'confirmed').length})
-            </button>
-            <button
-              onClick={() => setFilter('pending')}
-              className="filter-select"
-              style={{
-                background: filter === 'pending' ? '#fbbf24' : '#f8fafc',
-                color: filter === 'pending' ? 'white' : '#0f172a',
-                border: filter === 'pending' ? '1px solid #fbbf24' : '1px solid #e2e8f0',
-                cursor: 'pointer'
-              }}
-            >
-              Pending ({mockBookings.filter(b => b.status === 'pending').length})
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className="filter-select"
-              style={{
-                background: filter === 'completed' ? '#10b981' : '#f8fafc',
-                color: filter === 'completed' ? 'white' : '#0f172a',
-                border: filter === 'completed' ? '1px solid #10b981' : '1px solid #e2e8f0',
-                cursor: 'pointer'
-              }}
-            >
-              Completed ({mockBookings.filter(b => b.status === 'completed').length})
-            </button>
+          <div className="stat-card">
+            <div className="stat-icon confirmed">
+              <i className="bi bi-check-circle"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{getBookingCount('confirmed')}</div>
+              <div className="stat-label">Confirmed</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon in-progress">
+              <i className="bi bi-arrow-repeat"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{getBookingCount('in-progress')}</div>
+              <div className="stat-label">In Progress</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon completed">
+              <i className="bi bi-check-all"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{getBookingCount('completed')}</div>
+              <div className="stat-label">Completed</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bookings List */}
-      {filteredBookings.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
-          {filteredBookings.map((booking) => (
-            <div key={booking.id} className="settings-card">
-              <div className="settings-card-body">
-                <div className="row align-items-center">
-                  <div className="col-md-2 text-center mb-3 mb-md-0">
-                    <img
-                      src={booking.provider.avatar}
-                      alt={booking.provider.name}
-                      style={{
-                        width: '72px',
-                        height: '72px',
-                        borderRadius: '0.75rem',
-                        border: '2px solid #e2e8f0',
-                        marginBottom: '0.75rem',
-                        objectFit: 'cover'
-                      }}
-                    />
-                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0f172a', marginBottom: '0.25rem' }}>
-                      {booking.provider.name}
+        {/* Tabs */}
+        <div className="bookings-tabs">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <i className={tab.icon}></i>
+              <span>{tab.label}</span>
+              <span className="tab-count">{getBookingCount(tab.id)}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Bookings List */}
+        <div className="bookings-list">
+          {filteredBookings.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <i className="bi bi-calendar-x"></i>
+              </div>
+              <h3>No bookings found</h3>
+              <p>You don't have any {activeTab !== 'all' ? activeTab : ''} bookings yet.</p>
+              <button className="btn-primary" onClick={() => navigate('/resident/find-services')}>
+                <i className="bi bi-search"></i>
+                Find Services
+              </button>
+            </div>
+          ) : (
+            filteredBookings.map(booking => {
+              const statusBadge = getStatusBadge(booking.status);
+              return (
+                <div key={booking.id} className="booking-card">
+                  <div className="booking-card-header">
+                    <div className="booking-id">
+                      <i className="bi bi-receipt"></i>
+                      {booking.id}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      <i className="bi bi-star-fill" style={{ color: '#fbbf24' }}></i> {booking.provider.rating}
+                    <div className="booking-status" style={{ color: statusBadge.color, background: statusBadge.bg }}>
+                      <i className={statusBadge.icon}></i>
+                      {statusBadge.label}
                     </div>
                   </div>
 
-                  <div className="col-md-6 mb-3 mb-md-0">
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.875rem', letterSpacing: '-0.02em' }}>
-                      {booking.service}
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.625rem', marginBottom: '0.875rem' }}>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: '500' }}>
-                        <i className="bi bi-calendar me-2"></i>
-                        {booking.date}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: '500' }}>
-                        <i className="bi bi-clock me-2"></i>
-                        {booking.time}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: '500' }}>
-                        <i className="bi bi-geo-alt me-2"></i>
-                        {booking.location}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: '500' }}>
-                        <i className="bi bi-hourglass-split me-2"></i>
-                        {booking.estimatedDuration}
+                  <div className="booking-card-body">
+                    <div className="booking-provider">
+                      <img 
+                        src={booking.provider.avatar} 
+                        alt={booking.provider.name}
+                        className="provider-avatar"
+                      />
+                      <div className="provider-info">
+                        <div className="provider-name-row">
+                          <h4>{booking.provider.name}</h4>
+                          {booking.provider.verified && (
+                            <span className="verified-badge-small">
+                              <i className="bi bi-patch-check-fill"></i>
+                            </span>
+                          )}
+                        </div>
+                        <div className="provider-rating">
+                          <i className="bi bi-star-fill"></i>
+                          <span>{booking.provider.rating}</span>
+                        </div>
                       </div>
                     </div>
-                    {booking.description && (
-                      <div style={{
-                        padding: '0.75rem',
-                        background: '#f8fafc',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.8125rem',
-                        color: '#64748b',
-                        lineHeight: '1.5'
-                      }}>
-                        <strong style={{ color: '#0f172a' }}>Details:</strong> {booking.description}
+
+                    <div className="booking-details-grid">
+                      <div className="booking-detail">
+                        <div className="detail-icon service">
+                          <i className={booking.service.icon}></i>
+                        </div>
+                        <div>
+                          <div className="detail-label">Service</div>
+                          <div className="detail-value">{booking.service.name}</div>
+                        </div>
+                      </div>
+
+                      <div className="booking-detail">
+                        <div className="detail-icon date">
+                          <i className="bi bi-calendar-event"></i>
+                        </div>
+                        <div>
+                          <div className="detail-label">Date & Time</div>
+                          <div className="detail-value">{formatDate(booking.date)} • {booking.time}</div>
+                        </div>
+                      </div>
+
+                      <div className="booking-detail">
+                        <div className="detail-icon location">
+                          <i className="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div>
+                          <div className="detail-label">Location</div>
+                          <div className="detail-value">{booking.address}</div>
+                        </div>
+                      </div>
+
+                      <div className="booking-detail">
+                        <div className="detail-icon price">
+                          <i className="bi bi-cash-coin"></i>
+                        </div>
+                        <div>
+                          <div className="detail-label">Price</div>
+                          <div className="detail-value price">₱{booking.price}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {booking.status === 'cancelled' && booking.cancelReason && (
+                      <div className="cancel-reason">
+                        <i className="bi bi-info-circle"></i>
+                        <span>Reason: {booking.cancelReason}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="col-md-2 text-center mb-3 mb-md-0">
-                    <div style={{ marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '0.6875rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.375rem' }}>
-                        Total Amount
-                      </div>
-                      <div style={{ fontSize: '2rem', fontWeight: '800', color: '#2563eb', lineHeight: '1', letterSpacing: '-0.04em' }}>
-                        ₱{booking.totalCost}
-                      </div>
+                  <div className="booking-card-footer">
+                    <div className="booking-meta">
+                      <i className="bi bi-clock"></i>
+                      Booked on {formatDate(booking.createdAt)}
                     </div>
-                    <span className={`status-badge status-${booking.status}`}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </span>
-                  </div>
-
-                  <div className="col-md-2">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                      {booking.status === 'confirmed' && (
-                        <>
-                          <button className="action-btn" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                            <i className="bi bi-chat-dots me-2"></i>
-                            Message
-                          </button>
-                          <button className="action-btn action-btn-danger" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                            Cancel
-                          </button>
-                        </>
-                      )}
-                      {booking.status === 'pending' && (
-                        <>
-                          <button className="action-btn" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                            <i className="bi bi-pencil me-2"></i>
-                            Edit
-                          </button>
-                          <button className="action-btn action-btn-danger" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                            Cancel
-                          </button>
-                        </>
-                      )}
-                      {booking.status === 'completed' && (
-                        <>
-                          {booking.rating ? (
-                            <button className="action-btn" disabled style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600', opacity: 0.6, cursor: 'not-allowed' }}>
-                              <i className="bi bi-check-circle me-2"></i>
-                              Reviewed
-                            </button>
-                          ) : (
-                            <button className="action-btn action-btn-primary" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                              <i className="bi bi-star me-2"></i>
-                              Review
-                            </button>
-                          )}
-                          <button className="action-btn" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                            Book Again
-                          </button>
-                        </>
-                      )}
-                      {booking.status === 'cancelled' && (
-                        <button className="action-btn" style={{ width: '100%', padding: '0.625rem', height: 'auto', fontWeight: '600' }}>
-                          Book Again
-                        </button>
-                      )}
+                    <div className="booking-actions">
+                      <button 
+                        className="btn-view-details"
+                        onClick={() => handleViewDetails(booking.id)}
+                      >
+                        View Details
+                        <i className="bi bi-arrow-right"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
-      ) : (
-        <div className="settings-card">
-          <div className="settings-card-body text-center py-5">
-            <i className="bi bi-calendar-x" style={{ fontSize: '4rem', color: '#cbd5e1', marginBottom: '1.5rem', display: 'block' }}></i>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem' }}>No bookings found</h3>
-            <p style={{ color: '#64748b', marginBottom: '1.25rem', fontSize: '0.9375rem' }}>
-              {filter === 'all' 
-                ? "You haven't made any bookings yet"
-                : `No ${filter} bookings at the moment`}
-            </p>
-            <Link 
-              to="/resident/find-services"
-              className="action-btn action-btn-primary"
-              style={{ width: 'auto', padding: '0.625rem 1.5rem', height: 'auto' }}
-            >
-              <i className="bi bi-plus-circle me-2"></i>
-              Book a Service
-            </Link>
-          </div>
-        </div>
-      )}
+      </div>
     </ResidentLayout>
   );
 };

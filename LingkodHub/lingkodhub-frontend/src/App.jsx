@@ -14,7 +14,9 @@ import FindServices from './pages/resident/FindServices';
 import ProviderDirectory from './pages/resident/ProviderDirectory';
 import ProviderProfile from './pages/resident/ProviderProfile';
 import BookingWizard from './pages/resident/BookingWizard';
+import BookService from './pages/resident/BookService';
 import MyBookings from './pages/resident/MyBookings';
+import BookingDetails from './pages/resident/BookingDetails';
 import ResidentReviews from './pages/resident/ResidentReviews';
 import ResidentNotifications from './pages/resident/ResidentNotifications';
 import ResidentProfile from './pages/resident/ResidentProfile';
@@ -22,6 +24,9 @@ import ResidentProfile from './pages/resident/ResidentProfile';
 // Provider Pages
 import ProviderDashboard from './pages/provider/ProviderDashboard';
 import BookingRequests from './pages/provider/BookingRequests';
+import BookingDetailsProvider from './pages/provider/BookingDetailsProvider';
+import TodaysSchedule from './pages/provider/TodaysSchedule';
+import ServiceInProgress from './pages/provider/ServiceInProgress';
 import AvailabilityCalendar from './pages/provider/AvailabilityCalendar';
 import ServicesManagement from './pages/provider/ServicesManagement';
 import ProviderReviews from './pages/provider/ProviderReviews';
@@ -55,7 +60,9 @@ function App() {
         <Route path="/resident/providers" element={<ProviderDirectory />} />
         <Route path="/resident/provider/:id" element={<ProviderProfile />} />
         <Route path="/resident/booking/:step?" element={<BookingWizard />} />
+        <Route path="/resident/book-service" element={<BookService />} />
         <Route path="/resident/bookings" element={<MyBookings />} />
+        <Route path="/resident/bookings/:bookingId" element={<BookingDetails />} />
         <Route path="/resident/reviews" element={<ResidentReviews />} />
         <Route path="/resident/notifications" element={<ResidentNotifications />} />
         <Route path="/resident/profile" element={<ResidentProfile />} />
@@ -63,6 +70,9 @@ function App() {
         {/* Provider Routes */}
         <Route path="/provider/dashboard" element={<ProviderDashboard />} />
         <Route path="/provider/requests" element={<BookingRequests />} />
+        <Route path="/provider/booking/:bookingId" element={<BookingDetailsProvider />} />
+        <Route path="/provider/todays-schedule" element={<TodaysSchedule />} />
+        <Route path="/provider/service-in-progress/:bookingId" element={<ServiceInProgress />} />
         <Route path="/provider/calendar" element={<AvailabilityCalendar />} />
         <Route path="/provider/services" element={<ServicesManagement />} />
         <Route path="/provider/reviews" element={<ProviderReviews />} />

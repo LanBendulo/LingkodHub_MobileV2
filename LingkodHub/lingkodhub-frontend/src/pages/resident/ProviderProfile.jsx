@@ -1,222 +1,442 @@
-import { useParams, Link } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
+import { useParams, useNavigate } from 'react-router-dom';
+import ResidentLayout from '../../layouts/ResidentLayout';
 import { mockProviders } from '../../data/mockData';
+import './ProviderProfile.css';
 
 const ProviderProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const provider = mockProviders.find(p => p.id === parseInt(id)) || mockProviders[0];
 
-  const menuItems = [
-    { path: '/resident/dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
-    { path: '/resident/find-services', label: 'Find Services', icon: 'bi-search' },
-    { path: '/resident/providers', label: 'Providers', icon: 'bi-people' },
-    { path: '/resident/bookings', label: 'My Bookings', icon: 'bi-calendar-check' },
-    { path: '/resident/reviews', label: 'Reviews', icon: 'bi-star' },
-    { path: '/resident/notifications', label: 'Notifications', icon: 'bi-bell', badge: 3 },
-    { path: '/resident/profile', label: 'Profile', icon: 'bi-person' },
-  ];
+  // Mock enhanced data
+  const enhancedProvider = {
+    ...provider,
+    yearsOfExperience: 5,
+    responseRate: '98%',
+    memberSince: '2024',
+    languages: ['English', 'Filipino'],
+    workingHours: 'Mon-Sat: 8:00 AM - 6:00 PM',
+    serviceAreas: ['Matina', 'Bajada', 'Talomo', 'Buhangin', 'Toril'],
+    verifications: [
+      { label: 'Verified Provider', verified: true },
+      { label: 'Government ID Verified', verified: true },
+      { label: 'Face Verified', verified: true },
+      { label: 'Background Checked', verified: false },
+    ],
+    servicesDetailed: [
+      { name: 'Leak Repair', category: 'Plumbing', icon: 'bi-droplet-fill', price: 350, duration: '30-60 mins' },
+      { name: 'Pipe Installation', category: 'Plumbing', icon: 'bi-droplet-fill', price: 450, duration: '1-2 hours' },
+      { name: 'Drain Unclogging', category: 'Plumbing', icon: 'bi-droplet-fill', price: 300, duration: '30-45 mins' },
+      { name: 'Faucet Replacement', category: 'Plumbing', icon: 'bi-droplet-fill', price: 250, duration: '30 mins' },
+    ],
+  };
+
+  const handleBookService = (service) => {
+    navigate('/resident/book-service', {
+      state: {
+        provider: {
+          id: provider.id,
+          name: provider.name,
+          owner: provider.name,
+          avatar: provider.avatar,
+          verified: provider.verified,
+          rating: provider.rating,
+          reviews: provider.reviews,
+          completedJobs: provider.completedJobs,
+        },
+        service: {
+          id: service.name.toLowerCase().replace(/\s+/g, '-'),
+          name: service.name,
+          category: service.category,
+          icon: service.icon,
+          providerPrice: service.price,
+          suggestedPrice: Math.round(service.price * 0.95),
+          estimatedDuration: service.duration,
+          pricingLabel: 'Fair Pricing',
+        },
+      },
+    });
+  };
+
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <>
+        {[...Array(fullStars)].map((_, i) => (
+          <i key={`full-${i}`} className="bi bi-star-fill"></i>
+        ))}
+        {hasHalfStar && <i className="bi bi-star-half"></i>}
+        {[...Array(emptyStars)].map((_, i) => (
+          <i key={`empty-${i}`} className="bi bi-star"></i>
+        ))}
+      </>
+    );
+  };
 
   return (
-    <DashboardLayout role="resident" menuItems={menuItems}>
-      <div className="mb-4">
-        <Link to="/resident/providers" className="text-decoration-none text-muted">
-          <i className="bi bi-arrow-left me-2"></i>
-          Back to Providers
-        </Link>
-      </div>
+    <ResidentLayout>
+      <div className="provider-profile-container">
+        {/* Breadcrumb */}
+        <div className="breadcrumb-nav">
+          <i className="bi bi-house-door"></i>
+          <i className="bi bi-chevron-right"></i>
+          <span className="breadcrumb-link" onClick={() => navigate('/resident/providers')}>Providers</span>
+          <i className="bi bi-chevron-right"></i>
+          <span>{provider.name}</span>
+        </div>
 
-      <div className="row g-4">
-        {/* Provider Info Card */}
-        <div className="col-lg-4">
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body text-center p-4">
-              <img
-                src={provider.avatar}
+        {/* Header Card */}
+        <div className="provider-header-card">
+          <div className="provider-header-content">
+            <div className="provider-avatar-section">
+              <img 
+                src={provider.avatar} 
                 alt={provider.name}
-                className="rounded-circle mb-3"
-                width="120"
-                height="120"
+                className="provider-avatar-hero"
               />
-              <h4 className="mb-1">
-                {provider.name}
-                {provider.verified && (
-                  <i className="bi bi-patch-check-fill text-primary ms-2"></i>
-                )}
-              </h4>
-              <div className="text-warning mb-3">
-                <i className="bi bi-star-fill"></i>
-                <span className="text-dark ms-1 fw-semibold">{provider.rating}</span>
-                <span className="text-muted ms-1">({provider.reviews} reviews)</span>
-              </div>
-
-              <Link to="/resident/booking/service" className="btn btn-primary w-100 mb-2">
-                <i className="bi bi-calendar-check me-2"></i>
-                Book Now
-              </Link>
-              <button className="btn btn-outline-primary w-100">
-                <i className="bi bi-chat-dots me-2"></i>
-                Send Message
-              </button>
+              {provider.availability === 'Available Now' && (
+                <div className="availability-badge">
+                  <i className="bi bi-circle-fill"></i>
+                  Available Today
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* Quick Stats */}
-          <div className="card border-0 shadow-sm">
-            <div className="card-body">
-              <h6 className="mb-3">Quick Stats</h6>
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Response Time</span>
-                <span className="fw-semibold">{provider.responseTime}</span>
+            <div className="provider-header-info">
+              <div className="provider-name-row">
+                <h1 className="provider-name-hero">{provider.name}</h1>
+                {provider.verified && (
+                  <span className="verified-badge-hero">
+                    <i className="bi bi-patch-check-fill"></i>
+                    Verified
+                  </span>
+                )}
               </div>
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Completed Jobs</span>
-                <span className="fw-semibold">{provider.completedJobs}</span>
+
+              <div className="provider-meta-row">
+                <div className="rating-hero">
+                  <span className="rating-value">{provider.rating}</span>
+                  <div className="stars-hero">
+                    {renderStars(provider.rating)}
+                  </div>
+                  <span className="reviews-count">({provider.reviews} reviews)</span>
+                </div>
+                <div className="meta-separator">•</div>
+                <div className="meta-item">
+                  <i className="bi bi-check-circle"></i>
+                  {provider.completedJobs} completed jobs
+                </div>
+                <div className="meta-separator">•</div>
+                <div className="meta-item">
+                  <i className="bi bi-calendar"></i>
+                  {enhancedProvider.yearsOfExperience} years experience
+                </div>
+                <div className="meta-separator">•</div>
+                <div className="meta-item">
+                  <i className="bi bi-geo-alt"></i>
+                  {provider.location}
+                </div>
               </div>
-              <div className="d-flex justify-content-between mb-3">
-                <span className="text-muted">Hourly Rate</span>
-                <span className="fw-semibold text-primary">₱{provider.hourlyRate}/hr</span>
-              </div>
-              <div className="d-flex justify-content-between">
-                <span className="text-muted">Availability</span>
-                <span className={`badge ${
-                  provider.availability === 'Available Now' 
-                    ? 'bg-success' 
-                    : 'bg-warning'
-                }`}>
-                  {provider.availability}
-                </span>
+
+              <div className="provider-actions-hero">
+                <button 
+                  className="btn-book-hero"
+                  onClick={() => handleBookService(enhancedProvider.servicesDetailed[0])}
+                >
+                  <i className="bi bi-calendar-check"></i>
+                  Book Service
+                </button>
+                <button className="btn-message-hero">
+                  <i className="bi bi-chat-dots"></i>
+                  Send Message
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="col-lg-8">
-          {/* About */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <h5 className="mb-3">About</h5>
-              <p className="text-muted mb-4">{provider.about}</p>
-
-              <div className="row g-3 mb-4">
-                <div className="col-md-6">
-                  <div className="d-flex align-items-center">
-                    <i className="bi bi-geo-alt text-primary me-2"></i>
-                    <span>{provider.location}</span>
+        {/* Main Grid */}
+        <div className="provider-grid">
+          {/* Main Content */}
+          <div className="provider-main">
+            {/* Services Grid */}
+            <div className="section-card">
+              <h2 className="section-title">
+                <i className="bi bi-tools"></i>
+                Services Offered
+              </h2>
+              <div className="services-grid">
+                {enhancedProvider.servicesDetailed.map((service, index) => (
+                  <div key={index} className="service-card">
+                    <div className="service-card-header">
+                      <div className="service-icon">
+                        <i className={service.icon}></i>
+                      </div>
+                      <div>
+                        <div className="service-category">{service.category}</div>
+                        <h3 className="service-name">{service.name}</h3>
+                      </div>
+                    </div>
+                    <div className="service-card-body">
+                      <div className="service-detail">
+                        <span className="detail-label">Starting at</span>
+                        <span className="detail-price">₱{service.price}</span>
+                      </div>
+                      <div className="service-detail">
+                        <span className="detail-label">Duration</span>
+                        <span className="detail-duration">{service.duration}</span>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-book-service"
+                      onClick={() => handleBookService(service)}
+                    >
+                      Book Now
+                      <i className="bi bi-arrow-right"></i>
+                    </button>
                   </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="d-flex align-items-center">
-                    <i className="bi bi-briefcase text-primary me-2"></i>
-                    <span>{provider.completedJobs} jobs completed</span>
-                  </div>
-                </div>
-              </div>
-
-              <h6 className="mb-3">Services Offered</h6>
-              <div className="d-flex flex-wrap gap-2 mb-4">
-                {provider.services.map((service, index) => (
-                  <span key={index} className="badge bg-primary-subtle text-primary px-3 py-2">
-                    {service}
-                  </span>
-                ))}
-              </div>
-
-              <h6 className="mb-3">Skills & Expertise</h6>
-              <div className="d-flex flex-wrap gap-2 mb-4">
-                {provider.skills.map((skill, index) => (
-                  <span key={index} className="badge bg-light text-dark border px-3 py-2">
-                    <i className="bi bi-check-circle-fill text-success me-1"></i>
-                    {skill}
-                  </span>
-                ))}
-              </div>
-
-              <h6 className="mb-3">Certifications</h6>
-              <div className="d-flex flex-wrap gap-2">
-                {provider.certifications.map((cert, index) => (
-                  <span key={index} className="badge bg-success-subtle text-success px-3 py-2">
-                    <i className="bi bi-award me-1"></i>
-                    {cert}
-                  </span>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Reviews */}
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4">
-              <h5 className="mb-4">Reviews ({provider.reviews})</h5>
+            {/* About Section */}
+            <div className="section-card">
+              <h2 className="section-title">
+                <i className="bi bi-info-circle"></i>
+                About
+              </h2>
+              <p className="about-text">{provider.about}</p>
               
-              {/* Review Summary */}
-              <div className="row g-3 mb-4 pb-4 border-bottom">
-                <div className="col-md-4 text-center">
-                  <div className="display-4 fw-bold text-primary mb-2">{provider.rating}</div>
-                  <div className="text-warning mb-2">
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-fill"></i>
-                    <i className="bi bi-star-half"></i>
+              <div className="about-details">
+                <div className="about-detail-item">
+                  <i className="bi bi-clock-history"></i>
+                  <div>
+                    <div className="about-detail-label">Working Hours</div>
+                    <div className="about-detail-value">{enhancedProvider.workingHours}</div>
                   </div>
-                  <div className="text-muted">{provider.reviews} reviews</div>
                 </div>
-                <div className="col-md-8">
+                <div className="about-detail-item">
+                  <i className="bi bi-translate"></i>
+                  <div>
+                    <div className="about-detail-label">Languages</div>
+                    <div className="about-detail-value">{enhancedProvider.languages.join(', ')}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Skills & Certifications */}
+            <div className="section-card">
+              <h2 className="section-title">
+                <i className="bi bi-award"></i>
+                Skills & Certifications
+              </h2>
+              
+              <h3 className="subsection-title">Skills & Expertise</h3>
+              <div className="skills-grid">
+                {provider.skills.map((skill, index) => (
+                  <div key={index} className="skill-badge">
+                    <i className="bi bi-check-circle-fill"></i>
+                    {skill}
+                  </div>
+                ))}
+              </div>
+
+              <h3 className="subsection-title">Certifications</h3>
+              <div className="certifications-grid">
+                {provider.certifications.map((cert, index) => (
+                  <div key={index} className="certification-badge">
+                    <i className="bi bi-award"></i>
+                    {cert}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="section-card">
+              <h2 className="section-title">
+                <i className="bi bi-star"></i>
+                Reviews ({provider.reviews})
+              </h2>
+
+              {/* Rating Summary */}
+              <div className="rating-summary">
+                <div className="rating-summary-left">
+                  <div className="rating-large">{provider.rating}</div>
+                  <div className="stars-large">
+                    {renderStars(provider.rating)}
+                  </div>
+                  <div className="rating-label">{provider.reviews} reviews</div>
+                </div>
+
+                <div className="rating-distribution">
                   {[5, 4, 3, 2, 1].map(rating => (
-                    <div key={rating} className="d-flex align-items-center mb-2">
-                      <span className="me-2">{rating} ⭐</span>
-                      <div className="progress flex-grow-1 me-2" style={{ height: '8px' }}>
-                        <div
-                          className="progress-bar bg-warning"
+                    <div key={rating} className="distribution-row">
+                      <span className="distribution-label">{rating}</span>
+                      <i className="bi bi-star-fill"></i>
+                      <div className="distribution-bar">
+                        <div 
+                          className="distribution-fill"
                           style={{ width: `${rating === 5 ? 80 : rating === 4 ? 15 : 5}%` }}
                         ></div>
                       </div>
-                      <span className="text-muted small">{rating === 5 ? '80%' : rating === 4 ? '15%' : '5%'}</span>
+                      <span className="distribution-percent">{rating === 5 ? '80%' : rating === 4 ? '15%' : '5%'}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Individual Reviews */}
-              <div className="space-y-4">
-                {[1, 2, 3].map((review) => (
-                  <div key={review} className="mb-4 pb-4 border-bottom">
-                    <div className="d-flex align-items-start mb-2">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=User+${review}&background=random`}
-                        alt="Reviewer"
-                        className="rounded-circle me-3"
-                        width="40"
-                        height="40"
+              <div className="reviews-list">
+                {[
+                  { name: 'Maria Santos', service: 'Leak Repair', rating: 5, date: '2 weeks ago', review: 'Excellent service! Very professional and thorough. Fixed my kitchen sink leak quickly and explained everything clearly. Highly recommended!' },
+                  { name: 'Pedro Cruz', service: 'Pipe Installation', rating: 5, date: '1 month ago', review: 'Great work! Arrived on time and completed the job efficiently. Very clean and professional. Will definitely hire again.' },
+                  { name: 'Ana Reyes', service: 'Drain Unclogging', rating: 4, date: '1 month ago', review: 'Good service overall. Took a bit longer than expected but got the job done well. Fair pricing.' },
+                ].map((review, index) => (
+                  <div key={index} className="review-card">
+                    <div className="review-header">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${review.name.replace(' ', '+')}&background=2563eb&color=fff`}
+                        alt={review.name}
+                        className="reviewer-avatar"
                       />
-                      <div className="flex-grow-1">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <h6 className="mb-0">User {review}</h6>
-                            <div className="text-warning small">
-                              <i className="bi bi-star-fill"></i>
-                              <i className="bi bi-star-fill"></i>
-                              <i className="bi bi-star-fill"></i>
-                              <i className="bi bi-star-fill"></i>
-                              <i className="bi bi-star-fill"></i>
-                            </div>
+                      <div className="reviewer-info">
+                        <div className="reviewer-name">{review.name}</div>
+                        <div className="review-meta">
+                          <div className="review-stars">
+                            {renderStars(review.rating)}
                           </div>
-                          <small className="text-muted">{review} week{review > 1 ? 's' : ''} ago</small>
+                          <span className="review-separator">•</span>
+                          <span className="review-date">{review.date}</span>
                         </div>
-                        <p className="text-muted mt-2 mb-0">
-                          Excellent service! Very professional and thorough. Highly recommended!
-                        </p>
                       </div>
                     </div>
+                    <div className="review-service">
+                      <i className="bi bi-tools"></i>
+                      {review.service}
+                    </div>
+                    <p className="review-text">{review.review}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
+
+          {/* Sidebar */}
+          <div className="provider-sidebar">
+            {/* Provider Summary */}
+            <div className="sidebar-card sticky-sidebar">
+              <h3 className="sidebar-title">Provider Summary</h3>
+              
+              <div className="summary-stats">
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-clock-history"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">{provider.responseTime}</div>
+                    <div className="stat-label">Response Time</div>
+                  </div>
+                </div>
+
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-check-circle"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">{provider.completedJobs}</div>
+                    <div className="stat-label">Completed Jobs</div>
+                  </div>
+                </div>
+
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-star-fill"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">{provider.rating}</div>
+                    <div className="stat-label">Average Rating</div>
+                  </div>
+                </div>
+
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-graph-up-arrow"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">{enhancedProvider.responseRate}</div>
+                    <div className="stat-label">Response Rate</div>
+                  </div>
+                </div>
+
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-calendar-check"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">{enhancedProvider.memberSince}</div>
+                    <div className="stat-label">Member Since</div>
+                  </div>
+                </div>
+
+                <div className="summary-stat">
+                  <div className="stat-icon-wrapper">
+                    <i className="bi bi-cash-coin"></i>
+                  </div>
+                  <div>
+                    <div className="stat-value">₱{provider.hourlyRate}/hr</div>
+                    <div className="stat-label">Price Range</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Trust & Verification */}
+            <div className="sidebar-card">
+              <h3 className="sidebar-title">
+                <i className="bi bi-shield-check"></i>
+                Trust & Verification
+              </h3>
+              <div className="verification-badges">
+                {enhancedProvider.verifications.map((item, index) => (
+                  <div 
+                    key={index} 
+                    className={`verification-item ${item.verified ? 'verified' : 'not-verified'}`}
+                  >
+                    <i className={item.verified ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill'}></i>
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Service Area */}
+            <div className="sidebar-card">
+              <h3 className="sidebar-title">
+                <i className="bi bi-geo-alt"></i>
+                Service Area
+              </h3>
+              <div className="service-area-list">
+                {enhancedProvider.serviceAreas.map((area, index) => (
+                  <div key={index} className="service-area-item">
+                    <i className="bi bi-check-circle-fill"></i>
+                    {area}
+                  </div>
+                ))}
+              </div>
+              <div className="service-area-note">
+                <i className="bi bi-info-circle"></i>
+                Serving Davao City
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </DashboardLayout>
+    </ResidentLayout>
   );
 };
 

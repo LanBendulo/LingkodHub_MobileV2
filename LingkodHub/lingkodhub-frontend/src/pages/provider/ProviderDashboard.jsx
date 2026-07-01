@@ -1,20 +1,38 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProviderLayout from '../../layouts/ProviderLayout';
-import { mockBookings } from '../../data/mockData';
+import { mockBookingsProvider, calculateProviderStats } from '../../data/providerMockData';
 import './ProviderPages.css';
 
 const ProviderDashboard = () => {
   const [timeFilter, setTimeFilter] = useState('30d');
+  const [bookings, setBookings] = useState([]);
+  const [stats, setStats] = useState(null);
 
-  const pendingRequests = mockBookings.filter(b => b.status === 'pending');
-  const confirmedBookings = mockBookings.filter(b => b.status === 'confirmed');
-  const completedJobs = mockBookings.filter(b => b.status === 'completed');
+  useEffect(() => {
+    // Load bookings from localStorage or use mock data
+    const savedBookings = localStorage.getItem('provider_bookings');
+    const loadedBookings = savedBookings ? JSON.parse(savedBookings) : mockBookingsProvider;
+    setBookings(loadedBookings);
+    
+    // Calculate stats
+    const calculatedStats = calculateProviderStats(loadedBookings);
+    setStats(calculatedStats);
+  }, []);
+
+  const pendingRequests = bookings.filter(b => b.status === 'pending');
+  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+  const completedJobs = bookings.filter(b => b.status === 'completed');
+  const inProgressJobs = bookings.filter(b => b.status === 'in-progress');
   
-  const totalEarnings = 125500;
-  const monthlyEarnings = 45200;
-  const averageRating = 4.8;
-  const totalReviews = 127;
+  // Get today's bookings
+  const today = new Date().toISOString().split('T')[0];
+  const todaysBookings = bookings.filter(b => b.date === today && ['confirmed', 'in-progress'].includes(b.status));
+
+  const totalEarnings = stats?.totalEarnings || 125500;
+  const monthlyEarnings = completedJobs.reduce((sum, b) => sum + b.pricing.provider, 0);
+  const averageRating = parseFloat(stats?.averageRating || 4.8);
+  const totalReviews = completedJobs.filter(b => b.review).length;
 
   const recentReviews = [
     { id: 1, client: 'John D.', rating: 5, comment: 'Excellent service! Very professional and efficient.', date: '2 days ago', service: 'Plumbing' },
@@ -158,6 +176,116 @@ const ProviderDashboard = () => {
 
       {/* Main Analytics Section */}
       <div className="analytics-row">
+        {/* Today's Schedule Widget */}
+        <div className="analytics-card large">
+          <div className="card-header">
+            <div>
+              <h3 className="card-title">Today's Schedule</h3>
+              <p className="card-subtitle">Jobs scheduled for today</p>
+            </div>
+            <Link to="/provider/todays-schedule" className="btn-link">
+              View All <i className="bi bi-arrow-right"></i>
+            </Link>
+          </div>
+          <div className="card-body">
+            {todaysBookings.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {todaysBookings.slice(0, 3).map((booking) => (
+                  <div key={booking.id} style={{
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
+                    border: '1px solid #f1f5f9',
+                    borderRadius: '0.625rem',
+                    padding: '1.125rem',
+                    transition: 'all 0.15s ease'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+                      <div>
+                        <div style={{ 
+                          display: 'inline-block',
+                          padding: '0.375rem 0.875rem',
+                          background: booking.status === 'in-progress' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                          color: booking.status === 'in-progress' ? '#8b5cf6' : '#2563eb',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.875rem',
+                          fontWeight: '700',
+                          marginBottom: '0.5rem'
+                        }}>
+                          <i className="bi bi-clock me-2"></i>
+                          {booking.time}
+                        </div>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.375rem', letterSpacing: '-0.01em' }}>
+                          {booking.service.name}
+                        </h4>
+                        <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '0.25rem', fontWeight: '500' }}>
+                          <i className="bi bi-person me-2"></i>
+                          {booking.resident.name}
+                        </p>
+                        <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, fontWeight: '500' }}>
+                          <i className="bi bi-geo-alt me-2"></i>
+                          {booking.address.barangay}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.03em' }}>
+                          ₱{booking.pricing.provider}
+                        </div>
+                        <span className={`status-badge status-${booking.status}`}>
+                          {booking.status === 'in-progress' ? 'IN PROGRESS' : 'CONFIRMED'}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <Link 
+                        to={`/provider/booking/${booking.id}`}
+                        className="action-btn action-btn-primary" 
+                        style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto', textDecoration: 'none' }}
+                      >
+                        <i className="bi bi-eye me-2"></i>
+                        View
+                      </Link>
+                      {booking.status === 'in-progress' ? (
+                        <Link
+                          to={`/provider/service-in-progress/${booking.id}`}
+                          className="action-btn"
+                          style={{ 
+                            width: 'auto', 
+                            padding: '0.5rem 1rem', 
+                            height: 'auto',
+                            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                            color: 'white',
+                            textDecoration: 'none'
+                          }}
+                        >
+                          <i className="bi bi-arrow-right-circle me-2"></i>
+                          Continue
+                        </Link>
+                      ) : (
+                        <button className="action-btn" style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto' }}>
+                          <i className="bi bi-play-circle me-2"></i>
+                          Start
+                        </button>
+                      )}
+                      <button 
+                        className="action-btn" 
+                        style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto' }}
+                        onClick={() => window.open(`tel:${booking.resident.phone}`)}
+                      >
+                        <i className="bi bi-telephone me-2"></i>
+                        Call
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-5">
+                <i className="bi bi-calendar-x" style={{ fontSize: '3rem', color: '#cbd5e1', marginBottom: '1rem' }}></i>
+                <p style={{ color: '#64748b', margin: 0 }}>No jobs scheduled for today</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Pending Requests */}
         <div className="analytics-card large">
           <div className="card-header">
@@ -183,7 +311,7 @@ const ProviderDashboard = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
                       <div>
                         <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#0f172a', marginBottom: '0.375rem', letterSpacing: '-0.01em' }}>
-                          {booking.service}
+                          {booking.service.name}
                         </h4>
                         <p style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '0.25rem', fontWeight: '500' }}>
                           <i className="bi bi-calendar me-2"></i>
@@ -191,25 +319,25 @@ const ProviderDashboard = () => {
                         </p>
                         <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: 0, fontWeight: '500' }}>
                           <i className="bi bi-geo-alt me-2"></i>
-                          {booking.location}
+                          {booking.address.barangay}
                         </p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a', marginBottom: '0.25rem', letterSpacing: '-0.03em' }}>
-                          ₱{booking.totalCost}
+                          ₱{booking.pricing.provider}
                         </div>
                         <span className="status-badge status-pending">Pending</span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="action-btn action-btn-primary" style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto' }}>
-                        <i className="bi bi-check-lg me-2"></i>
-                        Accept
-                      </button>
-                      <button className="action-btn action-btn-danger" style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto' }}>
-                        <i className="bi bi-x-lg me-2"></i>
-                        Decline
-                      </button>
+                      <Link 
+                        to={`/provider/booking/${booking.id}`}
+                        className="action-btn action-btn-primary" 
+                        style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto', textDecoration: 'none' }}
+                      >
+                        <i className="bi bi-eye me-2"></i>
+                        View
+                      </Link>
                       <button className="action-btn" style={{ width: 'auto', padding: '0.5rem 1rem', height: 'auto' }}>
                         <i className="bi bi-chat-dots me-2"></i>
                         Message
@@ -234,33 +362,33 @@ const ProviderDashboard = () => {
           </div>
           <div className="card-body">
             <div className="quick-actions">
-              <Link to="/provider/calendar" className="action-button primary">
+              <Link to="/provider/todays-schedule" className="action-button primary">
+                <div className="action-icon-title">
+                  <i className="bi bi-calendar-day"></i>
+                  <span className="action-title">Today's Schedule</span>
+                </div>
+                <span className="action-desc">View jobs scheduled for today</span>
+              </Link>
+              <Link to="/provider/requests?tab=pending" className="action-button secondary">
+                <div className="action-icon-title">
+                  <i className="bi bi-inbox"></i>
+                  <span className="action-title">Pending Requests</span>
+                </div>
+                <span className="action-desc">Review booking requests</span>
+              </Link>
+              <Link to="/provider/calendar" className="action-button tertiary">
                 <div className="action-icon-title">
                   <i className="bi bi-calendar-week"></i>
                   <span className="action-title">Update Calendar</span>
                 </div>
-                <span className="action-desc">Manage your availability and time slots</span>
+                <span className="action-desc">Manage your availability</span>
               </Link>
-              <Link to="/provider/services" className="action-button secondary">
+              <Link to="/provider/services" className="action-button quaternary">
                 <div className="action-icon-title">
                   <i className="bi bi-tools"></i>
                   <span className="action-title">Manage Services</span>
                 </div>
                 <span className="action-desc">Edit services and pricing</span>
-              </Link>
-              <Link to="/provider/analytics" className="action-button tertiary">
-                <div className="action-icon-title">
-                  <i className="bi bi-graph-up-arrow"></i>
-                  <span className="action-title">View Analytics</span>
-                </div>
-                <span className="action-desc">Track earnings and performance</span>
-              </Link>
-              <Link to="/provider/profile" className="action-button quaternary">
-                <div className="action-icon-title">
-                  <i className="bi bi-person"></i>
-                  <span className="action-title">Edit Profile</span>
-                </div>
-                <span className="action-desc">Update business information</span>
               </Link>
             </div>
           </div>
@@ -295,7 +423,7 @@ const ProviderDashboard = () => {
                       <tr key={booking.id}>
                         <td>
                           <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.875rem' }}>
-                            {booking.service}
+                            {booking.service.name}
                           </div>
                         </td>
                         <td>
@@ -306,12 +434,12 @@ const ProviderDashboard = () => {
                         </td>
                         <td>
                           <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: '500' }}>
-                            {booking.location}
+                            {booking.address.barangay}
                           </div>
                         </td>
                         <td className="text-end">
                           <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.9375rem' }}>
-                            ₱{booking.totalCost}
+                            ₱{booking.pricing.provider}
                           </div>
                         </td>
                       </tr>
