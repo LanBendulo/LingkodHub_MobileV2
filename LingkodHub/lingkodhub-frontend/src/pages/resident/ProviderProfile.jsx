@@ -78,9 +78,8 @@ const ProviderProfile = () => {
 
   return (
     <ResidentLayout>
-      <div className="provider-profile-container">
-        {/* Breadcrumb */}
-        <div className="breadcrumb-nav">
+      {/* Breadcrumb */}
+      <div className="breadcrumb-nav">
           <i className="bi bi-house-door"></i>
           <i className="bi bi-chevron-right"></i>
           <span className="breadcrumb-link" onClick={() => navigate('/resident/providers')}>Providers</span>
@@ -88,7 +87,7 @@ const ProviderProfile = () => {
           <span>{provider.name}</span>
         </div>
 
-        {/* Header Card */}
+        {/* Header Card - Full Width */}
         <div className="provider-header-card">
           <div className="provider-header-content">
             <div className="provider-avatar-section">
@@ -158,11 +157,12 @@ const ProviderProfile = () => {
           </div>
         </div>
 
-        {/* Main Grid */}
-        <div className="provider-grid">
-          {/* Main Content */}
+        {/* Main Grid - 70/30 Split */}
+        <div className="provider-profile-grid">
+          {/* Left Column - Main Content (70%) */}
           <div className="provider-main">
-            {/* Services Grid */}
+            
+            {/* Services Grid - 2-3 per row */}
             <div className="section-card">
               <h2 className="section-title">
                 <i className="bi bi-tools"></i>
@@ -202,7 +202,7 @@ const ProviderProfile = () => {
               </div>
             </div>
 
-            {/* About Section */}
+            {/* About Section - Compact */}
             <div className="section-card">
               <h2 className="section-title">
                 <i className="bi bi-info-circle"></i>
@@ -210,15 +210,15 @@ const ProviderProfile = () => {
               </h2>
               <p className="about-text">{provider.about}</p>
               
-              <div className="about-details">
-                <div className="about-detail-item">
+              <div className="about-details-compact">
+                <div className="about-detail-item-compact">
                   <i className="bi bi-clock-history"></i>
                   <div>
                     <div className="about-detail-label">Working Hours</div>
                     <div className="about-detail-value">{enhancedProvider.workingHours}</div>
                   </div>
                 </div>
-                <div className="about-detail-item">
+                <div className="about-detail-item-compact">
                   <i className="bi bi-translate"></i>
                   <div>
                     <div className="about-detail-label">Languages</div>
@@ -228,42 +228,46 @@ const ProviderProfile = () => {
               </div>
             </div>
 
-            {/* Skills & Certifications */}
+            {/* Skills & Certifications - Compact */}
             <div className="section-card">
               <h2 className="section-title">
                 <i className="bi bi-award"></i>
                 Skills & Certifications
               </h2>
               
-              <h3 className="subsection-title">Skills & Expertise</h3>
-              <div className="skills-grid">
-                {provider.skills.map((skill, index) => (
-                  <div key={index} className="skill-badge">
-                    <i className="bi bi-check-circle-fill"></i>
-                    {skill}
-                  </div>
-                ))}
+              <div className="skills-compact">
+                <h3 className="subsection-title-compact">Skills</h3>
+                <div className="skills-grid-compact">
+                  {provider.skills.map((skill, index) => (
+                    <div key={index} className="skill-badge">
+                      <i className="bi bi-check-circle-fill"></i>
+                      {skill}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <h3 className="subsection-title">Certifications</h3>
-              <div className="certifications-grid">
-                {provider.certifications.map((cert, index) => (
-                  <div key={index} className="certification-badge">
-                    <i className="bi bi-award"></i>
-                    {cert}
-                  </div>
-                ))}
+              <div className="certifications-compact">
+                <h3 className="subsection-title-compact">Certifications</h3>
+                <div className="certifications-grid-compact">
+                  {provider.certifications.map((cert, index) => (
+                    <div key={index} className="certification-badge">
+                      <i className="bi bi-award"></i>
+                      {cert}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Reviews Section */}
+            {/* Reviews Section - Full Width */}
             <div className="section-card">
               <h2 className="section-title">
                 <i className="bi bi-star"></i>
                 Reviews ({provider.reviews})
               </h2>
 
-              {/* Rating Summary */}
+              {/* Rating Summary - Horizontal */}
               <div className="rating-summary">
                 <div className="rating-summary-left">
                   <div className="rating-large">{provider.rating}</div>
@@ -326,70 +330,59 @@ const ProviderProfile = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Sidebar (30%) */}
           <div className="provider-sidebar">
-            {/* Provider Summary */}
-            <div className="sidebar-card sticky-sidebar">
+            
+            {/* Provider Summary - All Stats in One Card */}
+            <div className="sidebar-card">
               <h3 className="sidebar-title">Provider Summary</h3>
               
-              <div className="summary-stats">
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-clock-history"></i>
-                  </div>
+              <div className="summary-stats-grid">
+                <div className="summary-stat-compact">
+                  <i className="bi bi-clock-history"></i>
                   <div>
-                    <div className="stat-value">{provider.responseTime}</div>
-                    <div className="stat-label">Response Time</div>
+                    <div className="stat-value-compact">{provider.responseTime}</div>
+                    <div className="stat-label-compact">Response Time</div>
                   </div>
                 </div>
 
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-check-circle"></i>
-                  </div>
+                <div className="summary-stat-compact">
+                  <i className="bi bi-check-circle"></i>
                   <div>
-                    <div className="stat-value">{provider.completedJobs}</div>
-                    <div className="stat-label">Completed Jobs</div>
+                    <div className="stat-value-compact">{provider.completedJobs}</div>
+                    <div className="stat-label-compact">Completed Jobs</div>
                   </div>
                 </div>
 
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-star-fill"></i>
-                  </div>
+                <div className="summary-stat-compact">
+                  <i className="bi bi-star-fill"></i>
                   <div>
-                    <div className="stat-value">{provider.rating}</div>
-                    <div className="stat-label">Average Rating</div>
+                    <div className="stat-value-compact">{provider.rating}</div>
+                    <div className="stat-label-compact">Average Rating</div>
                   </div>
                 </div>
 
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-graph-up-arrow"></i>
-                  </div>
+                <div className="summary-stat-compact">
+                  <i className="bi bi-graph-up-arrow"></i>
                   <div>
-                    <div className="stat-value">{enhancedProvider.responseRate}</div>
-                    <div className="stat-label">Response Rate</div>
+                    <div className="stat-value-compact">{enhancedProvider.responseRate}</div>
+                    <div className="stat-label-compact">Response Rate</div>
                   </div>
                 </div>
 
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-calendar-check"></i>
-                  </div>
+                <div className="summary-stat-compact">
+                  <i className="bi bi-calendar-check"></i>
                   <div>
-                    <div className="stat-value">{enhancedProvider.memberSince}</div>
-                    <div className="stat-label">Member Since</div>
+                    <div className="stat-value-compact">{enhancedProvider.memberSince}</div>
+                    <div className="stat-label-compact">Member Since</div>
                   </div>
                 </div>
 
-                <div className="summary-stat">
-                  <div className="stat-icon-wrapper">
-                    <i className="bi bi-cash-coin"></i>
-                  </div>
+                <div className="summary-stat-compact">
+                  <i className="bi bi-cash-coin"></i>
                   <div>
-                    <div className="stat-value">₱{provider.hourlyRate}/hr</div>
-                    <div className="stat-label">Price Range</div>
+                    <div className="stat-value-compact">₱{provider.hourlyRate}/hr</div>
+                    <div className="stat-label-compact">Price Range</div>
                   </div>
                 </div>
               </div>
@@ -401,28 +394,28 @@ const ProviderProfile = () => {
                 <i className="bi bi-shield-check"></i>
                 Trust & Verification
               </h3>
-              <div className="verification-badges">
+              <div className="verification-badges-compact">
                 {enhancedProvider.verifications.map((item, index) => (
                   <div 
                     key={index} 
-                    className={`verification-item ${item.verified ? 'verified' : 'not-verified'}`}
+                    className={`verification-item-compact ${item.verified ? 'verified' : 'not-verified'}`}
                   >
                     <i className={item.verified ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill'}></i>
-                    {item.label}
+                    <span>{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Service Area */}
+            {/* Service Area - Compact Chips */}
             <div className="sidebar-card">
               <h3 className="sidebar-title">
                 <i className="bi bi-geo-alt"></i>
                 Service Area
               </h3>
-              <div className="service-area-list">
+              <div className="service-area-chips">
                 {enhancedProvider.serviceAreas.map((area, index) => (
-                  <div key={index} className="service-area-item">
+                  <div key={index} className="service-area-chip">
                     <i className="bi bi-check-circle-fill"></i>
                     {area}
                   </div>
@@ -435,7 +428,7 @@ const ProviderProfile = () => {
             </div>
           </div>
         </div>
-      </div>
+      {/* End of provider-profile-grid */}
     </ResidentLayout>
   );
 };
